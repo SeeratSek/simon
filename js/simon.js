@@ -1,11 +1,30 @@
 var KEYS = ['c', 'd', 'e', 'f'];
 var NOTE_DURATION = 1000;
+var clickedKeys = [];
+var numClickedKeys = 0;
 
 // NoteBox
 //
 // Acts as an interface to the coloured note boxes on the page, exposing methods
 // for playing audio, handling clicks,and enabling/disabling the note box.
-function NoteBox(key, onClick) {
+
+function onClick(key) {
+	clickedKeys.push(key);
+	currKey = clickedKeys.length;
+	if (clickedKeys.length == currKey){
+		// no other key was clicked so play them all
+		playKeys();
+	}
+}
+
+function playKeys() {
+	for (var clickedKey of clickedKeys){
+			clickedKeys.pop()
+			notes[clickedKey].play();
+		}
+}
+
+function NoteBox(key) {
 	// Create references to box element and audio element.
 	var boxEl = document.getElementById(key);
 	var audioEl = document.getElementById(key + '-audio');
@@ -20,7 +39,7 @@ function NoteBox(key, onClick) {
 	var playing = 0;
 
 	this.key = key;
-	this.onClick = onClick || function () {};
+	//this.onClick = onClick || function () {};
 
 	// Plays the audio associated with this NoteBox
 	this.play = function () {
@@ -53,8 +72,8 @@ function NoteBox(key, onClick) {
 	this.clickHandler = function () {
 		if (!enabled) return;
 
-		this.onClick(this.key)
-		this.play()
+		setTimeout(function () {this.onClick(key);}, 2500);
+		console.log('shouldWait');
 	}.bind(this)
 
 	boxEl.addEventListener('mousedown', this.clickHandler);
@@ -70,6 +89,8 @@ var notes = {};
 KEYS.forEach(function (key) {
 	notes[key] = new NoteBox(key);
 });
+
+
 
 KEYS.concat(KEYS.slice().reverse()).forEach(function(key, i) {
 	setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
