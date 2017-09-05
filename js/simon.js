@@ -129,7 +129,6 @@ function NoteBox(key, onClick) {
 		if (!enabled) return;
 		clickedKeys.push(this.key);
 		this.onClick(this.key);
-		
 	}.bind(this)
 
 	boxEl.addEventListener('mousedown', this.clickHandler);
@@ -154,9 +153,6 @@ KEYS.forEach(function (key) {
 if (SIMON) {
 	startGame();
 }
-
-
-
 
 //KEYS.concat(KEYS.slice().reverse()).forEach(function(key, i) {
 //	setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
