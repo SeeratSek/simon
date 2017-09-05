@@ -1,10 +1,78 @@
 var KEYS = ['c', 'd', 'e', 'f'];
 var NOTE_DURATION = 1000;
+var clickedKeys = [];
+var clickTimeout;
+var simonKeys = [];
+var simonIndex = 0;
+var level = 1;
 
+// play simon
+var SIMON = true;
+var currOnClick = null;
 // NoteBox
 //
 // Acts as an interface to the coloured note boxes on the page, exposing methods
 // for playing audio, handling clicks,and enabling/disabling the note box.
+function playKeys(keys) {
+	for(let i = 0; i < keys.length; i++) {
+		clickedKey = keys[i];
+		setTimeout(notes[clickedKey].play.bind(null, clickedKey), i * NOTE_DURATION);
+	};
+	keys = [];
+}
+
+function startGame () {
+	// light up all keys
+	KEYS.forEach(function (key, i) {
+		notes[key].lightUp();
+	})
+	// play random key to start game
+	this.simonKeys.push(this.chooseRandomKey());
+	setTimeout(function () {this.playKeys(this.simonKeys)}, 1500);
+}
+
+function simonOnClick(key) {
+	if (simonKeys[simonIndex] != key) {
+		//incorrect response, light up all keys and restart game
+		simonKeys = [];
+		clickedKeys = [];
+		simonIndex= 0;
+		level = 1;
+		startGame();
+	} 
+	else {
+		simonIndex++;
+
+		if (simonIndex == level) {
+		// pattern completed, go to next level
+			level++;
+			clickedKeys = [];
+			simonIndex = 0;
+			simonKeys.push(chooseRandomKey());
+			setTimeout(function () {playKeys(simonKeys)}, 1000);
+		
+		}
+	}
+	// else do nothing, still need to finish level
+}
+
+function chooseRandomKey() {
+	return KEYS[this.getRandomInt(0, KEYS.length)];
+}
+
+// Code taken from
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+function getRandomInt(min, max) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
+
+function onClick() {
+	clearTimeout(clickTimeout);
+	clickTimeout = setTimeout(function () {this.playKeys(this.clickedKeys);}, 2500);
+}
+
 function NoteBox(key, onClick) {
 	// Create references to box element and audio element.
 	var boxEl = document.getElementById(key);
@@ -39,6 +107,13 @@ function NoteBox(key, onClick) {
 		}, NOTE_DURATION)
 	}
 
+	// light up the notebox for NOTE_DURATION time (no sound)
+	this.lightUp = function () {		
+		boxEl.classList.add('active');
+		setTimeout(function () {
+			boxEl.classList.remove('active');
+		}, NOTE_DURATION)
+	}
 	// Enable this NoteBox
 	this.enable = function () {
 		enabled = true;
@@ -52,9 +127,9 @@ function NoteBox(key, onClick) {
 	// Call this NoteBox's clickHandler and play the note.
 	this.clickHandler = function () {
 		if (!enabled) return;
-
-		this.onClick(this.key)
-		this.play()
+		clickedKeys.push(this.key);
+		this.onClick(this.key);
+		
 	}.bind(this)
 
 	boxEl.addEventListener('mousedown', this.clickHandler);
@@ -67,10 +142,22 @@ function NoteBox(key, onClick) {
 // It will also demonstrate programmatically playing notes by calling play directly.
 var notes = {};
 
+
+
+// if Simon game on, set handler to simonClickHandler 
+
+currOnClick = SIMON ? this.simonOnClick : this.onClick;
 KEYS.forEach(function (key) {
-	notes[key] = new NoteBox(key);
+	notes[key] = new NoteBox(key, currOnClick);
 });
 
-KEYS.concat(KEYS.slice().reverse()).forEach(function(key, i) {
-	setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
-});
+if (SIMON) {
+	startGame();
+}
+
+
+
+
+//KEYS.concat(KEYS.slice().reverse()).forEach(function(key, i) {
+//	setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
+//});
